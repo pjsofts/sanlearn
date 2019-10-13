@@ -13,9 +13,12 @@ async def test(request):
         first_name = request.json.get('first_name', '').strip().lower()
         last_name = request.json.get('last_name', '').strip().lower()
         age = request.json.get('age', 0)
+
+        if not isinstance(age, int) or not (0 <= age < 120):
+            return json(Results.AGE_NOT_VALID)
         if first_name and last_name:
-            is_uniq = await User.is_unique(doc=dict(first_name=first_name, last_name=last_name))
-            if is_uniq in (True, None):
+            user = await User.find_one(dict(first_name=first_name, last_name=last_name))
+            if not user:
                 await User.insert_one(dict(first_name=first_name, last_name=last_name, age=int(age)))
                 return json(Results.USER_ADDED_SUCCESSFULLY)
             else:
@@ -32,5 +35,5 @@ async def test(request):
         }
         if age:
             search["age"] = int(age)
-        cur = await User.find(request, search)  # due to a bug, send request as well
+        cur = await User.find(request, search)  # due to a bug, sending request as well
         return json({"users": str(cur.objects)})
