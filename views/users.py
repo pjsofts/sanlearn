@@ -12,7 +12,7 @@ async def test(request):
     if request.method == 'POST':
         first_name = request.json.get('first_name', '').strip().lower()
         last_name = request.json.get('last_name', '').strip().lower()
-        age = request.json.get('age', '')
+        age = request.json.get('age', 0)
         if first_name and last_name:
             is_uniq = await User.is_unique(doc=dict(first_name=first_name, last_name=last_name))
             if is_uniq in (True, None):
@@ -23,5 +23,14 @@ async def test(request):
         else:
             return json(Results.NAME_EMPTY)
     else:
-        cur = await User.find()
+        first_name = request.args.get('first_name', '').strip().lower()
+        last_name = request.args.get('last_name', '').strip().lower()
+        age = request.args.get('age', None)
+        search = {
+            "first_name": {'$regex': ".*%s.*" % first_name},
+            "last_name": {'$regex': ".*%s.*" % last_name},
+        }
+        if age:
+            search["age"] = int(age)
+        cur = await User.find(request, search)  # due to a bug, send request as well
         return json({"users": str(cur.objects)})
