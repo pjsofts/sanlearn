@@ -4,7 +4,7 @@ from sanic.response import json
 
 from app import app
 
-pq = asyncio.PriorityQueue(maxsize=5)
+pq = asyncio.PriorityQueue(maxsize=10)
 
 
 @app.route("/max10")
